@@ -1,0 +1,222 @@
+remstart
+        3D Objects
+        A nice viewer for 3D Objects that plays back their animations so that you can see every frame.
+remend
+
+rem Default Stuff, we refresh the screen ourselves, try to maintain 60fps
+sync on
+sync rate 60
+ink rgb(255,255,255),rgb(0,0,0)
+
+rem Setup resource management
+Dim SpritePool() as integer
+dim ImagePool() as integer
+InitSpritePool(10)
+InitImagePool(10)
+
+rem setup the cursor
+cursor = CreateUserCursor()
+
+rem window is up, so put in the buttons. These will eventually be replaced with images.
+cls rgb(0,0,0)
+playButton = CreateButton("Play")
+pauseButton = Createbutton("Pause")
+loadButton = CreateButton("Load")
+cancelButton = CreateButton("Cancel")
+exitButton = CreateButton("Exit")
+sliderbar = CreateSliderBar()
+sliderrange = CreateSliderRange("Animation Frame:")
+
+`setup file dialog sprite
+filedialogimg = GetImage()
+filedialogspr = GetSprite()
+ink rgb(128,128,128),0
+box 0,0,400,400
+get image filedialogimg,0,0,400,400
+ink rgb(255,255,255),0
+cls
+
+rem load the default model (or show the default message)
+load object "media\cubee.3ds",1
+load image "media\image0001.png",100
+texture object 1,100
+
+sprite sliderbar,234,496,sliderbar
+sprite playButton,40,516,playButton
+sprite loadButton,40,39,loadButton
+sprite exitButton,639,516,exitButton
+sprite sliderrange,224,486,sliderrange
+
+rem start main loop
+while escapekey()<1
+	rem if a button is pressed, react to it
+	
+	rem handle animation
+	rotate object 1,0,object angle y(1)+1,0
+	
+	rem update display
+	sprite cursor,mousex(),mousey(),cursor
+	text 0,0,str$(camera position x()) + " " + str$(camera position y()) + " " + str$(camera position z())
+	text 0,20,str$(object position x(1)) + " " + str$(object position y(1)) + " " + str$(object position z(1))
+	gosub main_interface
+	sync
+	
+rem end loop
+endwhile
+
+end
+
+main_interface:
+
+if mouseclick() = 1 and sprite collision(cursor,playButton) = 1
+    text 0,0,"button pressed!"
+    play object 1
+    `update the animation slider
+endif
+if mouseclick() = 1 and sprite collision (cursor,loadButton) = 1
+	text 0,0,"button pressed!"
+	gosub file_dialog
+endif
+if mouseclick() = 1 and sprite collision (cursor,exitButton) = 1
+	end
+endif
+
+if mouseclick()=1 and sprite collision(cursor,sliderrange) = 1
+	if mousex() < 510 and mousex() > 234
+		sprite sliderbar,sprite x(cursor)-3,496,sliderbar
+		`change to that section in the animation
+	endif
+endif
+
+return
+
+file_dialog:
+cancel = 0
+rem draw the dialog
+sprite filedialogspr,200,100,filedialogimg
+sprite loadButton,400,400,loadButton
+y = sprite height(loadButton)+ 410
+sprite cancelButton, 400,y,cancelButton
+rem fill in the files from the current directory, create sprites for each file name
+rem start main dialog loop
+repeat
+rem if a sprite is clicked, handle it 
+	if mouseclick() = 1 and sprite collision (cursor,cancelButton) = 1
+		hide sprite filedialogspr
+		cancel = 1
+	endif
+	
+	if mouseclick() = 1 and sprite collision (cursor, loadButton) = 1
+		load object objectfile$, 1
+	endif
+
+rem update interface
+sprite cursor,mousex(),mousey(),cursor
+sync
+
+rem end loop
+until cancel = 1
+
+return
+
+
+
+
+
+
+`--------------------
+` GUI FUNCTIONS
+`--------------------
+function CreateSliderBar()
+	sliderbarimage = GetImage()
+	sliderbarsprite = GetSprite()
+	
+	box 1,1,9,29
+	get image sliderbarimage,0,0,10,30
+	cls
+endfunction sliderbarimage
+
+function CreateSliderRange(label$)
+	sliderrangeimage = GetImage()
+	sliderrangesprite = GetSprite()
+	sliderrangeheight = text height(label$)+5
+	sliderrangelength = 300
+	
+	text 0,0,label$
+	
+	box 0,sliderrangeheight,sliderrangelength,sliderrangeheight+10
+	get image sliderrangeimage,0,0,sliderrangelength,sliderrangeheight+10
+	cls
+endfunction sliderrangeimage
+
+function CreateUserCursor()
+    cursor_image = GetImage()
+    cursor_sprite = GetSprite()
+    box 0,0,5,5
+    get image cursor_image,0,0,5,5
+    cls
+ENDFUNCTION cursor_sprite
+
+function CreateButton(label$)
+    button_padding = 10
+    button_image = GetImage()
+    button_sprite = GetSprite()
+    button_width = text width(label$)+button_padding
+    button_height = text height(label$)+button_padding
+    box 0,0,button_width,button_height
+    ink 0,0
+    text 5,5,label$
+    get image button_image,0,0,button_width,button_height
+    ink rgb(255,255,255),0
+    cls    
+ENDFUNCTION button_sprite
+
+` ------------------
+` Sprite Pool Functions
+` ------------------
+
+` Initialize the sprite pool
+function InitSpritePool(size)
+    empty array SpritePool()
+    for a=1 to size
+        Add to Stack SpritePool()
+        SpritePool()=a
+    next a    
+ENDFUNCTION
+
+`Get a new sprite number from the sprite pool
+function GetSprite()
+    sprNum = SpritePool()
+    remove from stack SpritePool()
+ENDFUNCTION sprNum
+
+`Remove the sprite number and put it back in the sprite pool
+function RemoveSprite(sprNum)
+    Add to Stack SpritePool()
+    SpritePool()=sprNum
+endfunction
+
+`----------------
+` Image Pool Functions
+`----------------
+
+` Initialize the Image Pool
+function InitImagePool(size)
+    empty array ImagePool()
+    for a = 1 to size 
+        Add to Stack ImagePool()
+        ImagePool() = a
+    NEXT a
+ENDFUNCTION
+
+`get a new image number from the image pool
+function GetImage()
+    imgNum = ImagePool()
+    Remove from stack ImagePool()
+ENDFUNCTION imgNum
+
+`remove the image number and put it back in the sprite pool
+function RemoveImage(imgNum)
+    add to stack ImagePool()
+    ImagePool()=imgNum
+ENDFUNCTION

@@ -1,0 +1,113 @@
+Rem ***** Included Source File *****
+type Widget
+    kind ` the kind of widget that is visible
+    id   ` the id of the widget that is visible
+endtype
+
+type Button
+    label$ ` the text on the button
+    parent ` the parent dialog of the button
+    posx   ` the x position of the button, this is relative to the parent dialog
+    posy   ` the y position of the button, this is relative to the parent dialog
+    width  ` the width of the button
+    height ` the height of the button
+    img    ` the image number of the button
+    spr    ` the sprite number of the button
+endtype
+
+type Dialog
+    label$ ` the text on the dialog
+    posx   ` the x position of the dialog
+    posy   ` the y position of the dialog
+    width  ` the width of the dialog
+    height ` the height of the dialog
+    img    ` the image number of the Dialog
+    spr    ` the sprite number of the dialog
+endtype
+
+DIM widg() as Widget ` contains information concerning visible widgets
+DIM btn() as Button ` contains the information for all buttons
+DIM dlg() as Dialog ` contains the information for all dialogs
+
+
+function CreateUserCursor()
+    cursor_image = GetImage()
+    cursor_sprite = GetSprite()
+    box 0,0,5,5
+    get image cursor_image,0,0,5,5
+    sprite cursor_sprite,mousex(),mousey(),cursor_image
+ENDFUNCTION cursor_sprite
+
+function UpdateUserCursor(cursor_sprite)
+    paste sprite cursor_sprite,mousex(),mousey()
+ENDFUNCTION 
+
+
+Function AddButton(label$, posx, posy, parent)
+    `button information
+    add to stack btn()
+    btn().label$ = label$
+    btn().posx = posx
+    btn().posy = posy
+    btn().width = text width(label$) + 8
+    btn().height = text height(label$) + 8
+    btn().img = GetImage()
+    btn().spr = GetSprite()
+    btn().parent = paremt
+    box 0,0,width,height
+    x = width - text width(label$)/2
+    y = height - text height(label$)/2
+    text x, y, label$
+    get image btn().img, 0,0,width,height
+    sprite btn().spr,posx+dlg(parent).posx,posy+dlg(parent).posx,btn().img
+ENDFUNCTION
+
+` ------------------
+` Sprite Pool Functions
+` ------------------
+
+` Initialize the sprite pool
+function InitSpritePool(size)
+    empty array SpritePool()
+    for a=1 to size
+        Add to Stack SpritePool()
+        SpritePool()=a
+    next a    
+ENDFUNCTION
+
+`Get a new sprite number from the sprite pool
+function GetSprite()
+    sprNum = SpritePool()
+    remove from stack SpritePool()
+ENDFUNCTION sprNum
+
+`Remove the sprite number and put it back in the sprite pool
+function RemoveSprite(sprNum)
+    Add to Stack SpritePool()
+    SpritePool()=sprNum
+endfunction
+
+`----------------
+` Image Pool Functions
+`----------------
+
+` Initialize the Image Pool
+function InitImagePool(size)
+    empty array ImagePool()
+    for a = 1 to size 
+        Add to Stack ImagePool()
+        ImagePool() = a
+    NEXT a
+ENDFUNCTION
+
+`get a new image number from the image pool
+function GetImage()
+    imgNum = ImagePool()
+    Remove from stack ImagePool()
+ENDFUNCTION imgNum
+
+`remove the image number and put it back in the sprite pool
+function RemoveImage(imgNum)
+    add to stack ImagePool()
+    ImagePool()=imgNum
+ENDFUNCTION
